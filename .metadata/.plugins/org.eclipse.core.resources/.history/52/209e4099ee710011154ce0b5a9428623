@@ -1,0 +1,50 @@
+package com.os.model;
+
+public class CoreGanttBlock {
+
+    private String coreName;
+    private String processName;
+    private long startTime;
+    private long endTime;
+
+    public CoreGanttBlock() {}
+
+    public CoreGanttBlock(String coreName, String processName, long startTime, long endTime) {
+        this.coreName = coreName;
+        this.processName = processName;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
+    public String getCoreName() {
+        return coreName;
+    }
+
+    public void setCoreName(String coreName) {
+        this.coreName = coreName;
+    }
+
+    public String getProcessName() {
+        return processName;
+    }
+
+    public void setProcessName(String processName) {
+        this.processName = processName;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+}

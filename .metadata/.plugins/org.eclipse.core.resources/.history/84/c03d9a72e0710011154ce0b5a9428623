@@ -1,0 +1,94 @@
+package com.os.model;
+
+public class Process {
+
+    private int pid;
+    private String name;
+    private ProcessState state;
+    private int burstTime;
+
+    // 🔥 NEW OS SCHEDULING FIELDS
+    private long arrivalTime;
+    private long startTime;
+    private long endTime;
+    private int remainingTime;
+
+    public Process() {}
+
+    public Process(int pid, String name, ProcessState state, int burstTime) {
+        this.pid = pid;
+        this.name = name;
+        this.state = state;
+        this.burstTime = burstTime;
+
+        this.remainingTime = burstTime;
+    }
+
+    // ---------------- GETTERS / SETTERS ----------------
+
+    public int getPid() {
+        return pid;
+    }
+
+    public void setPid(int pid) {
+        this.pid = pid;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ProcessState getState() {
+        return state;
+    }
+
+    public void setState(ProcessState state) {
+        this.state = state;
+    }
+
+    public int getBurstTime() {
+        return burstTime;
+    }
+
+    public void setBurstTime(int burstTime) {
+        this.burstTime = burstTime;
+    }
+
+    // 🔥 NEW FIELDS GETTERS/SETTERS
+
+    public long getArrivalTime() {
+        return arrivalTime;
+    }
+
+    public void setArrivalTime(long arrivalTime) {
+        this.arrivalTime = arrivalTime;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+
+    public int getRemainingTime() {
+        return remainingTime;
+    }
+
+    public void setRemainingTime(int remainingTime) {
+        this.remainingTime = remainingTime;
+    }
+}

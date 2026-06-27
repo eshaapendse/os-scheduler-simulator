@@ -1,0 +1,26 @@
+package com.os.model;
+
+public class GanttBlock {
+
+    private String processName;
+    private long startTime;
+    private long endTime;
+
+    public GanttBlock(String processName, long startTime, long endTime) {
+        this.processName = processName;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
+    public String getProcessName() {
+        return processName;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+}

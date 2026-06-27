@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;os-simulator-backend&apos;" deleteContents="false" description="Delete resource &apos;os-simulator-backend&apos;" element1="/os-simulator-backend" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1782527092167"/>&#x0A;<refactoring comment="Delete resource &apos;os-simulator-backend&apos;" deleteContents="false" description="Delete resource &apos;os-simulator-backend&apos;" element1="/os-simulator-backend" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1782527240684"/>
+</session>

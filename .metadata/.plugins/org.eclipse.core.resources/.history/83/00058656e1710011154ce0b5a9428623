@@ -1,0 +1,138 @@
+package com.os.service;
+
+import com.os.model.Process;
+import com.os.model.ProcessState;
+import com.os.model.GanttBlock;
+import com.os.model.CoreGanttBlock;
+import org.springframework.stereotype.Service;
+
+import java.util.Queue;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+@Service
+public class AdvancedSchedulerService {
+
+    private final Queue<Process> queue = new ConcurrentLinkedQueue<>();
+    private final List<Process> completed = new ArrayList<>();
+
+    private final List<GanttBlock> ganttChart = new ArrayList<>();
+    private final List<CoreGanttBlock> coreGantt = new ArrayList<>();
+
+    private final AtomicBoolean core1Busy = new AtomicBoolean(false);
+    private final AtomicBoolean core2Busy = new AtomicBoolean(false);
+
+    private final int TIME_QUANTUM = 2;
+
+    // ➕ ADD PROCESS
+    public void addProcess(Process p) {
+        p.setState(ProcessState.READY);
+        p.setArrivalTime(System.currentTimeMillis());
+        p.setRemainingTime(p.getBurstTime());
+        queue.add(p);
+    }
+
+    // ⚙️ MULTI-CORE EXECUTION
+    public void executeMultiCore() {
+
+        // CORE 1 THREAD
+        new Thread(() -> runOnCore("Core-1", core1Busy)).start();
+
+        // CORE 2 THREAD
+        new Thread(() -> runOnCore("Core-2", core2Busy)).start();
+    }
+
+    // 🧠 CORE EXECUTION LOGIC
+    private void runOnCore(String coreName, AtomicBoolean coreBusy) {
+
+        if (coreBusy.get()) return;
+
+        Process p = queue.poll();
+        if (p == null) return;
+
+        coreBusy.set(true);
+
+        try {
+            p.setState(ProcessState.RUNNING);
+
+            long start = System.currentTimeMillis();
+            p.setStartTime(start);
+
+            int execTime = Math.min(TIME_QUANTUM, p.getRemainingTime());
+
+            Thread.sleep(execTime * 1000L);
+
+            long end = System.currentTimeMillis();
+
+            // 📊 GLOBAL GANTT
+            ganttChart.add(new GanttBlock(
+                    p.getName(),
+                    start,
+                    end
+            ));
+
+            // 📊 CORE GANTT
+            coreGantt.add(new CoreGanttBlock(
+                    coreName,
+                    p.getName(),
+                    start,
+                    end
+            ));
+
+            p.setRemainingTime(p.getRemainingTime() - execTime);
+
+            if (p.getRemainingTime() > 0) {
+                p.setState(ProcessState.READY);
+                queue.add(p);
+            } else {
+                p.setState(ProcessState.TERMINATED);
+                p.setEndTime(end);
+                calculateMetrics(p);
+                completed.add(p);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        coreBusy.set(false);
+    }
+
+    // 📊 METRICS
+    private void calculateMetrics(Process p) {
+
+        p.setTurnaroundTime(p.getEndTime() - p.getArrivalTime());
+
+        p.setWaitingTime(
+                p.getTurnaroundTime() - (p.getBurstTime() * 1000L)
+        );
+
+        p.setResponseTime(
+                p.getStartTime() - p.getArrivalTime()
+        );
+    }
+
+    // 🔥 DEFAULT CALL
+    public void executeNext() {
+        executeMultiCore();
+    }
+
+    // 📊 GETTERS
+    public Queue<Process> getQueue() {
+        return queue;
+    }
+
+    public List<Process> getCompleted() {
+        return completed;
+    }
+
+    public List<GanttBlock> getGanttChart() {
+        return ganttChart;
+    }
+
+    public List<CoreGanttBlock> getCoreGantt() {
+        return coreGantt;
+    }
+}

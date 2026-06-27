@@ -1,0 +1,32 @@
+package com.os.model;
+
+public class Process {
+
+    private int pid;
+    private String name;
+    private ProcessState state;
+    private int burstTime;
+
+    public Process() {}
+
+    public Process(int pid, String name, ProcessState state, int burstTime) {
+        this.pid = pid;
+        this.name = name;
+        this.state = state;
+        this.burstTime = burstTime;
+    }
+
+    public void runProcess() {
+        this.state = ProcessState.RUNNING;
+
+        try {
+            Thread.sleep(burstTime * 1000L); // simulate CPU time
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        this.state = ProcessState.TERMINATED;
+    }
+
+    // getters/setters
+}

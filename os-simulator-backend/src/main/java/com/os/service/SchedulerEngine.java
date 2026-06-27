@@ -1,0 +1,210 @@
+package com.os.service;
+
+import com.os.dto.ScheduleRequest;
+import com.os.model.ScheduleResult;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+@Service
+public class SchedulerEngine {
+
+    public List<ScheduleResult> execute(ScheduleRequest req) {
+
+        String algo = req.getAlgorithm();
+
+        if (algo.equals("FCFS")) {
+            return fcfs(req);
+        }
+
+        if (algo.equals("SJF")) {
+            return sjf(req);
+        }
+
+        if (algo.equals("RR")) {
+        	return rr(req, req.getQuantum());
+        }
+
+        if (algo.equals("PRIORITY")) {
+            return priority(req);
+        }
+
+        return new ArrayList<>();
+    }
+
+    // ---------------- FCFS ----------------
+    private List<ScheduleResult> fcfs(ScheduleRequest req) {
+
+        List<Integer> at = req.getArrivalTimes();
+        List<Integer> bt = req.getBurstTimes();
+
+        int n = at.size();
+        List<ScheduleResult> res = new ArrayList<>();
+
+        int time = 0;
+
+        for (int i = 0; i < n; i++) {
+
+            int start = Math.max(time, at.get(i));
+            int completion = start + bt.get(i);
+
+            int tat = completion - at.get(i);
+            int wt = tat - bt.get(i);
+
+            time = completion;
+
+            res.add(new ScheduleResult("P" + (i + 1), start, completion, wt, tat));
+        }
+
+        return res;
+    }
+
+    // ---------------- SJF (non-preemptive) ----------------
+    private List<ScheduleResult> sjf(ScheduleRequest req) {
+        List<Integer> at = req.getArrivalTimes();
+        List<Integer> bt = req.getBurstTimes();
+
+        int n = at.size();
+        boolean[] done = new boolean[n];
+
+        int time = 0;
+        List<ScheduleResult> res = new ArrayList<>();
+
+        for (int count = 0; count < n; count++) {
+
+            int idx = -1;
+            int min = Integer.MAX_VALUE;
+
+            for (int i = 0; i < n; i++) {
+                if (!done[i] && at.get(i) <= time && bt.get(i) < min) {
+                    min = bt.get(i);
+                    idx = i;
+                }
+            }
+
+            if (idx == -1) {
+                time++;
+                count--;
+                continue;
+            }
+
+            int start = time;
+            int completion = start + bt.get(idx);
+
+            res.add(new ScheduleResult(
+                    "P" + (idx + 1),
+                    start,
+                    completion,
+                    completion - at.get(idx) - bt.get(idx),
+                    completion - at.get(idx)
+            ));
+
+            time = completion;
+            done[idx] = true;
+        }
+
+        return res;
+    }
+
+    // ---------------- ROUND ROBIN ----------------
+    private List<ScheduleResult> rr(ScheduleRequest req, int q) {
+
+        List<Integer> at = req.getArrivalTimes();
+        List<Integer> bt = req.getBurstTimes();
+
+        int n = at.size();
+        int[] rem = new int[n];
+        Arrays.fill(rem, 0);
+
+        for (int i = 0; i < n; i++) rem[i] = bt.get(i);
+
+        Queue<Integer> queue = new LinkedList<>();
+        List<ScheduleResult> res = new ArrayList<>();
+
+        int time = 0;
+        boolean[] inQueue = new boolean[n];
+
+        queue.add(0);
+        inQueue[0] = true;
+
+        while (!queue.isEmpty()) {
+
+            int i = queue.poll();
+
+            int start = time;
+
+            int exec = Math.min(q, rem[i]);
+            rem[i] -= exec;
+            time += exec;
+
+            if (rem[i] == 0) {
+
+                int completion = time;
+                int tat = completion - at.get(i);
+                int wt = tat - bt.get(i);
+
+                res.add(new ScheduleResult("P" + (i + 1), start, completion, wt, tat));
+            }
+
+            for (int j = 0; j < n; j++) {
+                if (!inQueue[j] && at.get(j) <= time) {
+                    queue.add(j);
+                    inQueue[j] = true;
+                }
+            }
+
+            if (rem[i] > 0) queue.add(i);
+        }
+
+        return res;
+    }
+
+    // ---------------- PRIORITY ----------------
+    private List<ScheduleResult> priority(ScheduleRequest req) {
+
+        List<Integer> at = req.getArrivalTimes();
+        List<Integer> bt = req.getBurstTimes();
+        List<Integer> pr = req.getPriorities();
+
+        int n = at.size();
+        boolean[] done = new boolean[n];
+
+        int time = 0;
+        List<ScheduleResult> res = new ArrayList<>();
+
+        for (int count = 0; count < n; count++) {
+
+            int idx = -1;
+            int best = Integer.MAX_VALUE;
+
+            for (int i = 0; i < n; i++) {
+                if (!done[i] && at.get(i) <= time && pr.get(i) < best) {
+                    best = pr.get(i);
+                    idx = i;
+                }
+            }
+
+            if (idx == -1) {
+                time++;
+                count--;
+                continue;
+            }
+
+            int start = time;
+            int completion = start + bt.get(idx);
+
+            res.add(new ScheduleResult(
+                    "P" + (idx + 1),
+                    start,
+                    completion,
+                    completion - at.get(idx) - bt.get(idx),
+                    completion - at.get(idx)
+            ));
+
+            time = completion;
+            done[idx] = true;
+        }
+
+        return res;
+    }
+}

@@ -1,0 +1,30 @@
+package com.os.service;
+
+import com.os.model.Process;
+import com.os.model.ProcessState;
+import org.springframework.stereotype.Service;
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+@Service
+public class SchedulerService {
+
+    private final Queue<Process> queue = new LinkedList<>();
+
+    public void addProcess(Process p) {
+        p.setState(ProcessState.READY);
+        queue.add(p);
+    }
+
+    public Queue<Process> getQueue() {
+        return queue;
+    }
+
+    public void executeNext() {
+        if (queue.isEmpty()) return;
+
+        Process p = queue.poll();
+        p.runProcess();
+    }
+}

@@ -1,0 +1,166 @@
+package com.os.service;
+
+import com.os.model.Process;
+import com.os.model.ProcessState;
+import com.os.model.GanttBlock;
+import org.springframework.stereotype.Service;
+
+import java.util.Queue;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+@Service
+public class AdvancedSchedulerService {
+
+    private final Queue<Process> queue = new ConcurrentLinkedQueue<>();
+    private final List<Process> completed = new ArrayList<>();
+    private final List<GanttBlock> ganttChart = new ArrayList<>();
+
+    private boolean cpuBusy = false;
+
+    private final int TIME_QUANTUM = 2;
+
+    // ➕ ADD PROCESS
+    public void addProcess(Process p) {
+        p.setState(ProcessState.READY);
+        p.setArrivalTime(System.currentTimeMillis());
+        p.setRemainingTime(p.getBurstTime());
+        queue.add(p);
+    }
+
+    // ⚙️ ROUND ROBIN EXECUTION (MAIN)
+    public void executeRR() {
+
+        if (cpuBusy) return;
+
+        Process p = queue.poll();
+        if (p == null) return;
+
+        cpuBusy = true;
+
+        new Thread(() -> {
+
+            try {
+                p.setState(ProcessState.RUNNING);
+
+                long start = System.currentTimeMillis();
+                p.setStartTime(start);
+
+                int execTime = Math.min(TIME_QUANTUM, p.getRemainingTime());
+
+                Thread.sleep(execTime * 1000L);
+
+                long end = System.currentTimeMillis();
+
+                // 📊 GANTT BLOCK
+                ganttChart.add(new GanttBlock(
+                        p.getName(),
+                        start,
+                        end
+                ));
+
+                p.setRemainingTime(p.getRemainingTime() - execTime);
+
+                // 🔁 NOT FINISHED → BACK TO QUEUE
+                if (p.getRemainingTime() > 0) {
+                    p.setState(ProcessState.READY);
+                    queue.add(p);
+                } else {
+                    p.setState(ProcessState.TERMINATED);
+                    p.setEndTime(end);
+
+                    // 📊 METRICS
+                    calculateMetrics(p);
+
+                    completed.add(p);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            cpuBusy = false;
+
+        }).start();
+    }
+
+    // ⚙️ FCFS EXECUTION
+    public void executeFCFS() {
+
+        if (cpuBusy) return;
+
+        Process p = queue.poll();
+        if (p == null) return;
+
+        cpuBusy = true;
+
+        new Thread(() -> {
+
+            try {
+                p.setState(ProcessState.RUNNING);
+
+                long start = System.currentTimeMillis();
+                p.setStartTime(start);
+
+                Thread.sleep(p.getBurstTime() * 1000L);
+
+                long end = System.currentTimeMillis();
+
+                // 📊 GANTT
+                ganttChart.add(new GanttBlock(
+                        p.getName(),
+                        start,
+                        end
+                ));
+
+                p.setState(ProcessState.TERMINATED);
+                p.setEndTime(end);
+
+                // 📊 METRICS
+                calculateMetrics(p);
+
+                completed.add(p);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            cpuBusy = false;
+
+        }).start();
+    }
+
+    // 🔥 DEFAULT SCHEDULER
+    public void executeNext() {
+        executeRR();
+    }
+
+    // 📊 METRICS CALCULATION (COMMON LOGIC)
+    private void calculateMetrics(Process p) {
+
+        p.setTurnaroundTime(p.getEndTime() - p.getArrivalTime());
+
+        p.setWaitingTime(
+                p.getTurnaroundTime() - (p.getBurstTime() * 1000L)
+        );
+
+        p.setResponseTime(
+                p.getStartTime() - p.getArrivalTime()
+        );
+    }
+
+    // 📊 GETTERS
+
+    public Queue<Process> getQueue() {
+        return queue;
+    }
+
+    public List<Process> getCompleted() {
+        return completed;
+    }
+
+    public List<GanttBlock> getGanttChart() {
+        return ganttChart;
+    }
+}

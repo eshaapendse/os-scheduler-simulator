@@ -1,0 +1,76 @@
+package com.os.controller;
+
+import com.os.dto.ProcessRequest;
+import com.os.model.Process;
+import com.os.model.GanttBlock;
+import com.os.model.CoreGanttBlock;
+import com.os.service.ProcessService;
+import com.os.service.AdvancedSchedulerService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/process")
+@CrossOrigin(origins = "http://localhost:4200")
+public class ProcessController {
+
+    @Autowired
+    private ProcessService processService;
+
+    @Autowired
+    private AdvancedSchedulerService schedulerService;
+
+    // ➕ CREATE PROCESS
+    @PostMapping("/create")
+    public Process createProcess(@RequestBody ProcessRequest request) {
+        return processService.createProcess(
+                request.getName(),
+                request.getBurstTime()
+        );
+    }
+
+    // ➕ ADD TO SCHEDULER
+    @PostMapping("/schedule")
+    public String scheduleProcess(@RequestBody ProcessRequest request) {
+
+        Process p = processService.createProcess(
+                request.getName(),
+                request.getBurstTime()
+        );
+
+        schedulerService.addProcess(p);
+
+        return "Process added to queue";
+    }
+
+    // ⚙️ EXECUTE CPU
+    @PostMapping("/execute")
+    public String execute() {
+        schedulerService.executeNext();
+        return "Execution started";
+    }
+
+    // 📊 GET ALL
+    @GetMapping("/all")
+    public List<Process> getAllProcesses() {
+        return processService.getAllProcesses();
+    }
+
+    // 📊 COMPLETED
+    @GetMapping("/completed")
+    public List<Process> getCompleted() {
+        return schedulerService.getCompleted();
+    }
+
+    // 📊 GANTT CHART API
+    @GetMapping("/gantt")
+    public List<GanttBlock> getGanttChart() {
+        return schedulerService.getGanttChart();
+    }
+    @GetMapping("/core-gantt")
+    public List<CoreGanttBlock> getCoreGantt() {
+        return schedulerService.getCoreGantt();
+    }
+}

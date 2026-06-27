@@ -1,0 +1,107 @@
+package com.os.service;
+
+import com.os.model.*;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+@Service
+public class AdvancedSchedulerService {
+
+    private final Queue<Process> queue = new ConcurrentLinkedQueue<>();
+    private final List<Process> completed = new ArrayList<>();
+    private final List<GanttBlock> ganttChart = new ArrayList<>();
+    private final List<CoreGanttBlock> coreGantt = new ArrayList<>();
+
+    private final int TIME_QUANTUM = 2;
+    private boolean cpuBusy = false;
+
+    // ✅ MUST EXIST (fixes your error)
+    public void addProcess(Process p) {
+        p.setState(ProcessState.READY);
+        p.setArrivalTime(System.currentTimeMillis());
+        p.setRemainingTime(p.getBurstTime());
+        queue.add(p);
+    }
+
+    // ⚙️ EXECUTION
+    public void executeNext() {
+        executeCore("Core-1");
+        executeCore("Core-2");
+    }
+
+    private void executeCore(String coreName) {
+
+        new Thread(() -> {
+
+            if (cpuBusy) return;
+            cpuBusy = true;
+
+            Process p = queue.poll();
+            if (p == null) {
+                cpuBusy = false;
+                return;
+            }
+
+            try {
+                p.setState(ProcessState.RUNNING);
+
+                long start = System.currentTimeMillis();
+                p.setStartTime(start);
+
+                int execTime = Math.min(TIME_QUANTUM, p.getRemainingTime());
+                Thread.sleep(execTime * 1000L);
+
+                long end = System.currentTimeMillis();
+
+                ganttChart.add(new GanttBlock(p.getName(), start, end));
+                coreGantt.add(new CoreGanttBlock(coreName, p.getName(), start, end));
+
+                p.setRemainingTime(p.getRemainingTime() - execTime);
+
+                if (p.getRemainingTime() > 0) {
+                    p.setState(ProcessState.READY);
+                    queue.add(p);
+                } else {
+                    p.setState(ProcessState.TERMINATED);
+                    p.setEndTime(end);
+                    calculateMetrics(p);
+                    completed.add(p);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            cpuBusy = false;
+
+        }).start();
+    }
+
+    private void calculateMetrics(Process p) {
+
+        long burstMs = p.getBurstTime() * 1000L;
+
+        p.setTurnaroundTime(p.getEndTime() - p.getArrivalTime());
+        p.setWaitingTime(p.getTurnaroundTime() - burstMs);
+        p.setResponseTime(p.getStartTime() - p.getArrivalTime());
+    }
+
+    // ✅ MUST EXIST (fixes getCompleted error)
+    public List<Process> getCompleted() {
+        return completed;
+    }
+
+    public Queue<Process> getQueue() {
+        return queue;
+    }
+
+    public List<GanttBlock> getGanttChart() {
+        return ganttChart;
+    }
+
+    public List<CoreGanttBlock> getCoreGantt() {
+        return coreGantt;
+    }
+}

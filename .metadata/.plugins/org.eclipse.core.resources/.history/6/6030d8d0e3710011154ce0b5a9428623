@@ -1,0 +1,5 @@
+package com.os.model;
+
+public class ScheduleResult {
+
+}

@@ -1,0 +1,23 @@
+package com.os.controller;
+
+import com.os.dto.ScheduleRequest;
+import com.os.model.ScheduleResult;
+import com.os.service.SchedulerEngine;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/schedule")
+@CrossOrigin(origins = "http://localhost:4200")
+public class SchedulerController {
+
+    @Autowired
+    private SchedulerEngine engine;
+
+    @PostMapping("/run")
+    public List<ScheduleResult> run(@RequestBody ScheduleRequest request) {
+        return engine.execute(request);
+    }
+}

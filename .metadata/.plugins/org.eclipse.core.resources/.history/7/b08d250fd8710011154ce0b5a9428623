@@ -1,0 +1,31 @@
+package com.os.controller;
+
+import com.os.dto.ProcessRequest;
+import com.os.model.Process;
+import com.os.service.ProcessService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/process")
+@CrossOrigin(origins = "http://localhost:4200")
+public class ProcessController {
+
+    @Autowired
+    private ProcessService processService;
+
+    @PostMapping("/create")
+    public Process createProcess(@RequestBody ProcessRequest request) {
+        return processService.createProcess(
+                request.getName(),
+                request.getBurstTime()
+        );
+    }
+
+    @GetMapping("/all")
+    public List<Process> getAllProcesses() {
+        return processService.getAllProcesses();
+    }
+}

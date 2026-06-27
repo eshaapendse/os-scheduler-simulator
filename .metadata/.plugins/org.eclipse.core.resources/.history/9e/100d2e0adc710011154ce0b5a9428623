@@ -1,0 +1,55 @@
+package com.os.model;
+
+public class Process {
+
+    private int pid;
+    private String name;
+    private ProcessState state;
+    private int burstTime;
+    private long arrivalTime;
+    private long startTime;
+    private long endTime;
+
+    private int remainingTime;
+
+    public Process() {}
+
+    public Process(int pid, String name, ProcessState state, int burstTime) {
+        this.pid = pid;
+        this.name = name;
+        this.state = state;
+        this.burstTime = burstTime;
+    }
+
+    public int getPid() {
+        return pid;
+    }
+
+    public void setPid(int pid) {
+        this.pid = pid;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ProcessState getState() {
+        return state;
+    }
+
+    public void setState(ProcessState state) {
+        this.state = state;
+    }
+
+    public int getBurstTime() {
+        return burstTime;
+    }
+
+    public void setBurstTime(int burstTime) {
+        this.burstTime = burstTime;
+    }
+}

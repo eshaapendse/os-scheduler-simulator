@@ -1,0 +1,43 @@
+package com.os.service;
+
+import com.os.model.Process;
+import com.os.model.ProcessState;
+import org.springframework.stereotype.Service;
+
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+@Service
+public class SchedulerService {
+
+    private final Queue<Process> queue = new ConcurrentLinkedQueue<>();
+
+    public void addProcess(Process p) {
+        p.setState(ProcessState.READY);
+        queue.add(p);
+    }
+
+    public Queue<Process> getQueue() {
+        return queue;
+    }
+
+    public void executeNext() {
+        Process p = queue.poll();
+
+        if (p == null) return;
+
+        // RUN IN BACKGROUND THREAD (simulate CPU core)
+        new Thread(() -> {
+            p.setState(ProcessState.RUNNING);
+
+            try {
+                Thread.sleep(p.getBurstTime() * 1000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            p.setState(ProcessState.TERMINATED);
+
+        }).start();
+    }
+}
